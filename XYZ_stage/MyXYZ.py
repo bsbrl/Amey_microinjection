@@ -68,7 +68,7 @@ class MyXYZ():
             print('X, Y, Z values are out of range')
     
     def set_Velocity(self, X_vel, Y_vel, Z_vel):
-        if X_vel >= 0 and X_vel <= 100 and Y_vel >= 0 and Y_vel <= 100 and Z_vel >= 0 and Z_vel <= 25:
+        if X_vel >= 0 and X_vel <= 100 and Y_vel >= 0 and Y_vel <= 100 and Z_vel >= 0 and Z_vel <= 50:
             with GCSDevice(self.CONTROLLERNAME) as pidevice:
                 pidevice.ConnectUSB(serialnum='120035601') 
                 pitools.startup(pidevice, stages=self.STAGES, refmodes=self.REFMODES)

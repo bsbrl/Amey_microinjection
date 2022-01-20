@@ -21,10 +21,15 @@ def transformation_inj_pip(pip_left, pip_righ, inj_left, inj_righ, curr_inj):
     # righ_x = np.matrix([[2.76], [-2.76]])
     # righ_y = np.matrix([[-2.26], [-2.26]])
     
-    left_x = np.matrix([[-2.21], [-3.39]])
-    left_y = np.matrix([[-2.80], [2.09]])
-    righ_x = np.matrix([[2.55], [-3.28]])
-    righ_y = np.matrix([[-3.06], [-2.45]])
+    # left_x = np.matrix([[-2.21], [-3.39]])
+    # left_y = np.matrix([[-2.80], [2.09]])
+    # righ_x = np.matrix([[2.55], [-3.28]])
+    # righ_y = np.matrix([[-3.06], [-2.45]])
+    
+    left_x = np.matrix([[-2.39], [-3.29]])
+    left_y = np.matrix([[-2.81], [2.14]])
+    righ_x = np.matrix([[2.47], [-3.29]])
+    righ_y = np.matrix([[-3.03], [-2.38]])
     
     img_size = np.matrix([[1280], [720]])
     
@@ -76,9 +81,9 @@ def transformation_inj_pip(pip_left, pip_righ, inj_left, inj_righ, curr_inj):
 def transformation_pip_z(inj_left, inj_righ, pip_left, pip_righ):
     pix_diff = inj_left.item(1) - pip_left.item(1)
     # z_change = (pix_diff/248)
-    x_change = (pix_diff/3950)
-    y_change = (pix_diff/23700)
-    z_change = (pix_diff/244.33)
+    x_change = (pix_diff/24000)
+    y_change = (pix_diff/24000)
+    z_change = (pix_diff/242.42)
     return x_change, y_change, z_change
 
 # pip_left = np.matrix([[630], [289]])
