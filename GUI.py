@@ -41,6 +41,8 @@ from ML_Yolo.yolo_object_detection_microscope_1 import YOLO_ML_1
 from ML_Yolo.yolo_object_detection_microscope_2 import YOLO_ML_2
 from ML_Yolo.yolo_object_detection_pipe_1 import YOLO_pipe_1
 from ML_Yolo.yolo_object_detection_pipe_2 import YOLO_pipe_2
+from ML_Yolo.yolo_object_detection_inj_success_1 import YOLO_inj_success_1
+from ML_Yolo.yolo_object_detection_inj_success_2 import YOLO_inj_success_2
 from ML_Yolo.yolo_object_detection_DSLR_divide import detections_dslr_divide_yolo
 
 ML_flag = 0
@@ -261,7 +263,7 @@ def camera_off_inclined_2(videoloop_stop_inclined_2):
 def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
     No = 0
     panels = []
-    cap1 = cv2.VideoCapture(1)
+    cap1 = cv2.VideoCapture(2)
     if not(cap1.isOpened()):
         print('Could not open video device 1')
     else:
@@ -274,7 +276,7 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
         # panel_ned_pos = tk.Label(app, text='Neddle Detection = (0,0)')
         # panel_ned_pos.place(x=475, y=590)
         while True:
-            # cap1 = cv2.VideoCapture(2)
+            # cap1 = cv2.VideoCapture(3)
             ret1, frame1 = cap1.read()
             # time.sleep(0.01)
             if needle_detection_start_1[0]:
@@ -304,6 +306,10 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
                 needle_detection_start_1[0] = False
                 break
             
+            if take_image_flag_2[0]:
+                cv2.imwrite('image.jpg', frame2)
+                take_image_flag_2[0] = True
+            
             if yolo_detection_start[0]:
                 frame1, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_1(frame1)
                 frame1, boxes_pipe_tip = YOLO_pipe_1(frame1)
@@ -320,11 +326,13 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
             # frame1 = cv2.rotate(frame1, cv2.ROTATE_180)
             # # Live needle detection end 
             
-            # # Circles for references
-            # frame1 = cv2.circle(frame1, (0,366), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame1 = cv2.circle(frame1, (1280,366), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame1 = cv2.circle(frame1, (878,0), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame1 = cv2.circle(frame1, (878,720), radius=5, color=(0, 0, 255), thickness=-1)
+            # Circles for references
+            frame1 = cv2.circle(frame1, (0,360), radius=5, color=(0, 0, 255), thickness=-1)
+            frame1 = cv2.circle(frame1, (1280,360), radius=5, color=(0, 0, 255), thickness=-1)
+            frame1 = cv2.circle(frame1, (640,0), radius=5, color=(0, 0, 255), thickness=-1)
+            frame1 = cv2.circle(frame1, (640,720), radius=5, color=(0, 0, 255), thickness=-1)
+            frame1 = cv2.line(frame1, (0, 360), (1280, 360), (0, 0, 255), 1)
+            frame1 = cv2.line(frame1, (640, 0), (640, 720), (0, 0, 255), 1)
             # frame1 = cv2.circle(frame1, (625,346), radius=5, color=(0, 0, 255), thickness=-1)
             
             frame1 = cv2.resize(frame1, (640, 320))
@@ -348,7 +356,7 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
     
 def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
     No = 0
-    cap2 = cv2.VideoCapture(2)
+    cap2 = cv2.VideoCapture(3)
     if not(cap2.isOpened()):
         print('Could not open video device')
     else:
@@ -361,7 +369,7 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
         # panel_ned_pos = tk.Label(app, text='Neddle Detection = (0,0)')
         # panel_ned_pos.place(x=1250, y=590)
         while True:
-            # cap = cv2.VideoCapture(0)
+            # cap = cv2.VideoCapture(4)
             ret2, frame2 = cap2.read()
             # time.sleep(0.01)
             if needle_detection_start_2[0]:
@@ -390,12 +398,17 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
                 print('Needle Detection Done')
                 break
             
+            if take_image_flag_2[0]:
+                cv2.imwrite('image.jpg', frame2)
+                take_image_flag_2[0] = True
+            
             if yolo_detection_start[0]:
                 frame2, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_2(frame2)
                 frame2, boxes_pipe_tip = YOLO_pipe_2(frame2)
                 if whole_start[0]:
                     yolk_right.put(boxes_cell)
                     pipe_right.put(boxes_pipe_tip)
+                    
             
             # Live Needle detection code
             # frame2 = cv2.rotate(frame2, cv2.ROTATE_180)
@@ -408,11 +421,13 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
             # frame2 =cv2.cvtColor(frame2, cv2.COLOR_BGR2GRAY)
             # frame2 = cv2.rotate(frame2, cv2.ROTATE_180)
             
-            # # Circles for references
-            # frame2 = cv2.circle(frame2, (0,427), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame2 = cv2.circle(frame2, (1280,427), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame2 = cv2.circle(frame2, (500,0), radius=5, color=(0, 0, 255), thickness=-1)
-            # frame2 = cv2.circle(frame2, (500,720), radius=5, color=(0, 0, 255), thickness=-1)
+            # Circles for references
+            frame2 = cv2.circle(frame2, (0,360), radius=5, color=(0, 0, 255), thickness=-1)
+            frame2 = cv2.circle(frame2, (1280,360), radius=5, color=(0, 0, 255), thickness=-1)
+            frame2 = cv2.circle(frame2, (640,0), radius=5, color=(0, 0, 255), thickness=-1)
+            frame2 = cv2.circle(frame2, (640,720), radius=5, color=(0, 0, 255), thickness=-1)
+            frame2 = cv2.line(frame2, (0, 360), (1280, 360), (0, 0, 255), 1)
+            frame2 = cv2.line(frame2, (640, 0), (640, 720), (0, 0, 255), 1)
             # frame2 = cv2.circle(frame2, (782,376), radius=5, color=(0, 0, 255), thickness=-1)
             
             frame2 = cv2.resize(frame2, (640, 320))
@@ -908,6 +923,10 @@ def get_z_reference(box_center, dish_number, pip_left, pip_righ, yolk_left, yolk
     z_reference = z_reference
     return z_reference
 
+def take_image():
+    take_image_flag_1 = [False]
+    take_image_flag_2 = [False]
+
 def embryo_detect(yolk_left, yolk_right, pix_range, pip_left, pip_righ, no_yolo_detection):
     all_center_x_left = []
     all_center_y_left = []
@@ -1100,7 +1119,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
         if dish_number == 1:
             x_place = 475
             y_place = 25
-            z_reference = 11.5
+            z_reference = 11.8
         if dish_number == 2:
             x_place = 1250
             y_place = 25
@@ -1173,6 +1192,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
                 pre_box_center_x, pre_box_center_y = img_DSLR_track(box_coordinate[i], pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, total_embryos, emb_status, dish_number)
                 #  Detect embryos for the first time
                 inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 150, pip_left, pip_righ, no_yolo_detection)
+                take_image()
                 if emb_status == 0:
                     unsuccess_inj = unsuccess_inj + 1
                 pre_box_center_x, pre_box_center_y = img_DSLR_track(box_coordinate[i], pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, total_embryos, emb_status, dish_number)
@@ -1263,6 +1283,8 @@ needle_detection_start_1 = [False]
 needle_detection_start_2 = [False]
 videoloop_stop_inclined_1 = [False]
 videoloop_stop_inclined_2 = [False]
+take_image_flag_1 = [False]
+take_image_flag_2 = [False]
 needle_point_detected = [False]
 yolo_detection_start = [False]
 whole_start = [False]
@@ -1364,8 +1386,8 @@ b3 = tk.Button(app, text='XYZ Stage', command=lambda: select_XYZ())
 b3.grid(row=2, column=1, sticky=tk.W, pady=4)
 b4 = tk.Button(app, text='Go to Position', command=lambda: go_to_pos_GUI(values))
 b4.grid(row=2, column=0, sticky=tk.W, pady=4)
-b5 = tk.Button(app, text='Camera On', command=lambda: camera_on(videoloop_stop))
-b5.grid(row=0, column=2, sticky=tk.W, pady=4)
+# b5 = tk.Button(app, text='Camera On', command=lambda: camera_on(videoloop_stop))
+# b5.grid(row=0, column=2, sticky=tk.W, pady=4)
 b6 = tk.Button(app, text='Center', image = img_center, height = 60, width = 60, command=lambda: move_center(default_center, values))
 b6.grid(row=8, column=1, sticky=tk.W, pady=4)
 b7 = tk.Button(app, text='X-', image = img_up, height = 60, width = 60, command=lambda: move_x_negative(values))
@@ -1436,18 +1458,18 @@ b39 = tk.Button(app, text='1000', anchor = tk.CENTER, height = 1, width = 4, com
 b39.grid(row=17, column=4, sticky=tk.W, pady=4)
 b40 = tk.Button(app, text='10000', anchor = tk.CENTER, height = 1, width = 4, command=lambda: change_speed_UMP(10000))
 b40.grid(row=17, column=5, sticky=tk.W, pady=4)
-b41 = tk.Button(app, text='Camera off', command=lambda: camera_off(videoloop_stop), bg='red')
-b41.grid(row=1, column=2, sticky=tk.W, pady=4)
-b42 = tk.Button(app, text='Auto focus', command=lambda: call_autofocus(values))
-b42.grid(row=10, column=0, sticky=tk.W, pady=4)
+# b41 = tk.Button(app, text='Camera off', command=lambda: camera_off(videoloop_stop), bg='red')
+# b41.grid(row=1, column=2, sticky=tk.W, pady=4)
+# b42 = tk.Button(app, text='Auto focus', command=lambda: call_autofocus(values))
+# b42.grid(row=10, column=0, sticky=tk.W, pady=4)
 b43 = tk.Button(app, text='Camera On 1', command=lambda: camera_on_inclined_1(videoloop_stop_inclined_1))
 b43.grid(row=11, column=0, sticky=tk.W, pady=4)
 b44 = tk.Button(app, text='Camera Off 1', command=lambda: camera_off_inclined_1(videoloop_stop_inclined_1), bg='red')
 b44.grid(row=11, column=1, sticky=tk.W, pady=4)
-b45 = tk.Button(app, text='Needle Position', command=lambda: needle_position())
-b45.grid(row=10, column=2, sticky=tk.W, pady=4)
-b46 = tk.Button(app, text='Needle Detection 2', command=lambda: call_needle_detection_2(values))
-b46.grid(row=12, column=2, sticky=tk.W, pady=4)
+# b45 = tk.Button(app, text='Needle Position', command=lambda: needle_position())
+# b45.grid(row=10, column=2, sticky=tk.W, pady=4)
+# b46 = tk.Button(app, text='Needle Detection 2', command=lambda: call_needle_detection_2(values))
+# b46.grid(row=12, column=2, sticky=tk.W, pady=4)
 b47 = tk.Button(app, text='Inject', command=lambda: inject_fun(values))
 b47.grid(row=10, column=3, sticky=tk.W, pady=4)
 b48 = tk.Button(app, text='Pressure', command=lambda: get_inject_status(True), bg='green')
@@ -1460,8 +1482,8 @@ b51 = tk.Button(app, text='Camera On 2', command=lambda: camera_on_inclined_2(vi
 b51.grid(row=12, column=0, sticky=tk.W, pady=4)
 b52 = tk.Button(app, text='Camera Off 2', command=lambda: camera_off_inclined_2(videoloop_stop_inclined_2), bg='red')
 b52.grid(row=12, column=1, sticky=tk.W, pady=4)
-b53 = tk.Button(app, text='Needle Detection 1', command=lambda: call_needle_detection_1(values))
-b53.grid(row=11, column=2, sticky=tk.W, pady=4)
+# b53 = tk.Button(app, text='Needle Detection 1', command=lambda: call_needle_detection_1(values))
+# b53.grid(row=11, column=2, sticky=tk.W, pady=4)
 b54 = tk.Button(app, text='Yolo', command=lambda: call_ml_yolo(values))
 b54.grid(row=10, column=4, sticky=tk.W, pady=4)
 b55 = tk.Button(app, text='2 LEDs on', command=lambda: LED_on_off(3))

@@ -41,6 +41,8 @@ from ML_Yolo.yolo_object_detection_microscope_1 import YOLO_ML_1
 from ML_Yolo.yolo_object_detection_microscope_2 import YOLO_ML_2
 from ML_Yolo.yolo_object_detection_pipe_1 import YOLO_pipe_1
 from ML_Yolo.yolo_object_detection_pipe_2 import YOLO_pipe_2
+from ML_Yolo.yolo_object_detection_inj_success_1 import YOLO_inj_success_1
+from ML_Yolo.yolo_object_detection_inj_success_2 import YOLO_inj_success_2
 from ML_Yolo.yolo_object_detection_DSLR_divide import detections_dslr_divide_yolo
 
 ML_flag = 0
@@ -258,10 +260,10 @@ def camera_off_inclined_2(videoloop_stop_inclined_2):
     # b52.configure(bg='red')
     print('Inclined Camera is off')
 
-def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
+def videoLoop_inclined_1(yolk_left, pipe_left, inj_succ_left, take_image_flag_1, yolo_inj_succ_start_1, yolo_pipe_start_1, embryo_number, image_folder_time, attempt_number, mirror=False):
     No = 0
     panels = []
-    cap1 = cv2.VideoCapture(1)
+    cap1 = cv2.VideoCapture(2)
     if not(cap1.isOpened()):
         print('Could not open video device 1')
     else:
@@ -274,7 +276,7 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
         # panel_ned_pos = tk.Label(app, text='Neddle Detection = (0,0)')
         # panel_ned_pos.place(x=475, y=590)
         while True:
-            # cap1 = cv2.VideoCapture(2)
+            # cap1 = cv2.VideoCapture(3)
             ret1, frame1 = cap1.read()
             # time.sleep(0.01)
             if needle_detection_start_1[0]:
@@ -304,14 +306,30 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
                 needle_detection_start_1[0] = False
                 break
             
+            if take_image_flag_1.queue[-1]:
+                print('Image 1 captured')
+                current_embryo_number = embryo_number.queue[-1]
+                current_attempt = attempt_number.queue[-1]
+                folder_name = image_folder_time.queue[-1]
+                cv2.imwrite('Injection_Images/' + folder_name + '/Embryo_left_{}_{}.jpg'.format(current_embryo_number, current_attempt), frame1)
+                take_image_flag_1.put(False)
+            
+            if yolo_inj_succ_start_1.queue[-1]:
+                frame1, success_status, unsuccess_status = YOLO_inj_success_1(frame1)
+                if whole_start[0]:
+                    inj_succ_left.put(success_status)
+                yolo_inj_succ_start_1.put(False)
+            
             if yolo_detection_start[0]:
                 frame1, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_1(frame1)
-                frame1, boxes_pipe_tip = YOLO_pipe_1(frame1)
                 if whole_start[0]:
                     yolk_left.put(boxes_yolk)
-                    pipe_left.put(boxes_pipe_tip)
-                
             
+            if yolo_pipe_start_1.queue[-1]:
+                frame1, boxes_pipe_tip = YOLO_pipe_1(frame1)
+                if whole_start[0]:
+                    pipe_left.put(boxes_pipe_tip)
+
             # # Live Needle detection code
             # frame1 = cv2.rotate(frame1, cv2.ROTATE_180)
             # (x_needle, y_needle, frame1) = needle_detection_live_1(frame1)
@@ -346,9 +364,9 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
                 break                    
         return panel
     
-def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
+def videoLoop_inclined_2(yolk_right, pipe_right, inj_succ_right, take_image_flag_2, yolo_inj_succ_start_2, yolo_pipe_start_2, embryo_number, image_folder_time, attempt_number, mirror=False):
     No = 0
-    cap2 = cv2.VideoCapture(2)
+    cap2 = cv2.VideoCapture(3)
     if not(cap2.isOpened()):
         print('Could not open video device')
     else:
@@ -361,7 +379,7 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
         # panel_ned_pos = tk.Label(app, text='Neddle Detection = (0,0)')
         # panel_ned_pos.place(x=1250, y=590)
         while True:
-            # cap = cv2.VideoCapture(0)
+            # cap = cv2.VideoCapture(4)
             ret2, frame2 = cap2.read()
             # time.sleep(0.01)
             if needle_detection_start_2[0]:
@@ -390,11 +408,28 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
                 print('Needle Detection Done')
                 break
             
+            if take_image_flag_2.queue[-1]:
+                print('Image 2 captured')
+                current_embryo_number = embryo_number.queue[-1]
+                current_attempt = attempt_number.queue[-1]
+                folder_name = image_folder_time.queue[-1]
+                cv2.imwrite('Injection_Images/' + folder_name + '/Embryo_right_{}_{}.jpg'.format(current_embryo_number, current_attempt), frame2)
+                take_image_flag_2.put(False)
+            
+            if yolo_inj_succ_start_2.queue[-1]:
+                frame2, success_status, unsuccess_status = YOLO_inj_success_2(frame2)
+                if whole_start[0]:
+                    inj_succ_right.put(success_status)
+                yolo_inj_succ_start_2.put(False)
+            
             if yolo_detection_start[0]:
                 frame2, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_2(frame2)
-                frame2, boxes_pipe_tip = YOLO_pipe_2(frame2)
                 if whole_start[0]:
                     yolk_right.put(boxes_yolk)
+                    
+            if yolo_pipe_start_2.queue[-1]:
+                frame2, boxes_pipe_tip = YOLO_pipe_2(frame2)
+                if whole_start[0]:
                     pipe_right.put(boxes_pipe_tip)
             
             # Live Needle detection code
@@ -727,6 +762,7 @@ def call_inject(values):
     values[2].delete(0, tk.END)
     values[2].insert(10, p)
 
+# Recording function 
 def recording(mirror=False):
     # display screen resolution, get it from your OS settings
     SCREEN_SIZE = (1920, 1080)
@@ -748,10 +784,44 @@ def recording(mirror=False):
             cv2.destroyAllWindows()
             out.release()
             break
-    
+
+# Stop Recording function
 def stop_recording(mirror = False):
     recording_stop = [True]
     
+def decide_dish(dish_number):
+    global dish1_flag
+    global dish2_flag
+    if dish_number == 1:
+        if b64.cget('bg') == 'red':
+            dish1_flag = [True]
+            b64.configure(bg='green')
+            print(dish1_flag)
+        elif b64.cget('bg') == 'green':
+            dish1_flag = [False]
+            b64.configure(bg='red')
+            print(dish1_flag)
+    if dish_number == 2:
+        if b65.cget('bg') == 'red':
+            dish2_flag = [True]
+            b65.configure(bg='green')
+            print(dish2_flag)
+        elif b65.cget('bg') == 'green':
+            dish2_flag = [False]
+            b65.configure(bg='red')
+            print(dish2_flag)
+
+def decide_pipe():
+    global pipe_flag
+    if b66.cget('bg') == 'red':
+        pipe_flag = [True]
+        b66.configure(bg='green')
+        print(pipe_flag)
+    elif b66.cget('bg') == 'green':
+        pipe_flag = [False]
+        b66.configure(bg='red')
+        print(pipe_flag)
+
 def Data_save(dish_number, injection_material, values, current_time, unsuccess_inj, success_inj):
     time = datetime.datetime.now()
     time = time.strftime("%m-%d-%Y_%H-%M-%S")
@@ -785,6 +855,32 @@ def Data_save(dish_number, injection_material, values, current_time, unsuccess_i
     np.save('D:/Microinjection_Project/Python_Code/Injection_Data/{}/box_coordinate.npy'.format(time), box_coordinate)
     np.save('D:/Microinjection_Project/Python_Code/Injection_Data/{}/class_ids.npy'.format(time), class_ids)
     
+def Data_save_injection_images(image_time, pip_left, pip_righ, initial_xyz_stage, yolk_data, change_xyz, sorted_box_center):
+    file = open("D:/Microinjection_Project/Python_Code/Injection_Images/" + image_time + "/Pipette.txt", "w+")
+    file.write("Pipette left: X=%d, Y=%d\n" %(pip_left.item(0), pip_left.item(1)))
+    file.write("Pipette right: X=%d, Y=%d" %(pip_righ.item(0), pip_righ.item(1)))
+    file.close()
+    for i in range(len(yolk_data)):
+        file = open("D:/Microinjection_Project/Python_Code/Injection_Images/" + image_time + "/Embryo_{}.txt".format(i+1), "w+")
+        file.write("Initial XYZ: X=%d, Y=%d, Z=%d \n" %(initial_xyz_stage[i][0], initial_xyz_stage[i][1], initial_xyz_stage[i][2]))
+        file.write("Initial DSLR Pixel: X=%d, Y=%d \n" %(sorted_box_center[i][0], sorted_box_center[i][1]))
+        for j in range(len(yolk_data[i])):
+            file.write("Attempt %d: \n" %(j))
+            file.write("Yolk left: X=%s, Y=%s; Yolk right: X=%s, Y=%s \n" %(str(yolk_data[i][j][0]), str(yolk_data[i][j][1]), str(yolk_data[i][j][2]), str(yolk_data[i][j][3])))
+            file.write("dX=%s, dY=%s, dZ=%s \n" %(str(change_xyz[i][j][0]), str(change_xyz[i][j][1]), str(change_xyz[i][j][2])))
+            file.write("\n")
+        file.close()
+    pip_orig_left = cv2.imread('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Embryo_left_1000_0.jpg')
+    pip_orig_righ = cv2.imread('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Embryo_right_1000_0.jpg')
+    cv2.imwrite('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Pipette_left.jpg', pip_orig_left)
+    cv2.imwrite('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Pipette_right.jpg', pip_orig_righ)   
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Pipette_left.npy', pip_left)
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/Pipette_right.npy', pip_righ)
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/initial_xyz_stage.npy', initial_xyz_stage)
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/yolk_data.npy', yolk_data)
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/change_xyz.npy', change_xyz)
+    np.save('D:/Microinjection_Project/Python_Code/Injection_Images/' + image_time + '/sorted_box_center.npy', sorted_box_center)
+        
 def call_pressure(values, direction):
     Pressure = MyPressureSystem()
     if direction == 'I':
@@ -908,6 +1004,16 @@ def get_z_reference(box_center, dish_number, pip_left, pip_righ, yolk_left, yolk
     z_reference = z_reference
     return z_reference
 
+def take_image(take_image_flag_1, take_image_flag_2, i, attempt):
+    take_image_flag_1.put(True)
+    take_image_flag_2.put(True)
+    embryo_number.put(i)
+    attempt_number.put(attempt)
+    
+def inj_succ_unsucc(yolo_inj_succ_start_1, yolo_inj_succ_start_2):
+    yolo_inj_succ_start_1.put(True)
+    yolo_inj_succ_start_2.put(True)
+
 def embryo_detect(yolk_left, yolk_right, pix_range, pip_left, pip_righ, no_yolo_detection):
     all_center_x_left = []
     all_center_y_left = []
@@ -921,8 +1027,10 @@ def embryo_detect(yolk_left, yolk_right, pix_range, pip_left, pip_righ, no_yolo_
     flag2 = no_yolo_detection
     while (p <= flag1 or q <= flag2) and (max_p <= 50 or max_q <= 50):
         data1 = yolk_left.queue[-1]
+        time.sleep(0.01)
         # print('data1', data1)
         data2 = yolk_right.queue[-1]
+        time.sleep(0.01)
         # print('data2', data2)
         if data1:
             for j in range(len(data1)):
@@ -976,46 +1084,55 @@ def start_whole_camera(values):
     yolk_right = Queue()
     pipe_left = Queue()
     pipe_right = Queue()
-    t = threading.Thread(name='start_whole', target=start_multidish_Yolo, args = (yolk_left, yolk_right, pipe_left, pipe_right, values))
-    w1 = threading.Thread(name='camera_1', target=videoLoop_inclined_1, args = (yolk_left, pipe_left, ))
-    w2 = threading.Thread(name='camera_2', target=videoLoop_inclined_2, args = (yolk_right, pipe_right, ))
+    t = threading.Thread(name='start_whole', target=start_multidish_Yolo, args = (yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_left, inj_succ_right, take_image_flag_1, take_image_flag_2, yolo_inj_succ_start_1, yolo_inj_succ_start_2, yolo_pipe_start_1, yolo_pipe_start_2, embryo_number, image_folder_time, attempt_number, values))
+    w1 = threading.Thread(name='camera_1', target=videoLoop_inclined_1, args = (yolk_left, pipe_left, inj_succ_left, take_image_flag_1, yolo_inj_succ_start_1, yolo_pipe_start_1, embryo_number, image_folder_time, attempt_number, ))
+    w2 = threading.Thread(name='camera_2', target=videoLoop_inclined_2, args = (yolk_right, pipe_right, inj_succ_right, take_image_flag_2, yolo_inj_succ_start_2, yolo_pipe_start_2, embryo_number, image_folder_time, attempt_number, ))
     # record = threading.Thread(name='Recording', target=recording)
     w1.start()
     w2.start()
     t.start()
     # record.start()
     
-def img_DSLR_track(box_coordinate, pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, number_detection, emb_status, dish_number):
+def img_DSLR_track(box_coordinate, pre_box_coordinate, pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, cur_embryo, pre_embryo, number_detection, emb_status, dish_number, succ_left, succ_right):
     image = cv2.imread('D:/Microinjection_Project/Python_Code/DSLR_image_with_clicked_Box_{}.jpg'.format(dish_number))
     start_point = (int(box_coordinate[1]), int(box_coordinate[0]))
     end_point = (int(box_coordinate[3]), int(box_coordinate[2]))
+    pre_start_point = (int(pre_box_coordinate[1]), int(pre_box_coordinate[0]))
+    pre_end_point = (int(pre_box_coordinate[3]), int(pre_box_coordinate[2]))
     image = cv2.rectangle(image, start_point, end_point, (255, 0, 0), 12)
     image = cv2.line(image, (int(pre_box_center_x), int(pre_box_center_y)), (int(box_center_x), int(box_center_y)), (0, 0, 255), 3)
-    image_record = image
+    
+    if cur_embryo == 0 and pre_embryo == -1:
+        image = cv2.rectangle(image, start_point, end_point, (0, 0, 0), 12)
+    elif cur_embryo == 1 and pre_embryo == 0:
+        image = cv2.rectangle(image, start_point, end_point, (255, 0, 0), 12)
+    elif cur_embryo == (number_detection):
+        image = cv2.rectangle(image, start_point, end_point, (255, 0, 0), 12)
+    elif emb_status == 0:
+        image = cv2.rectangle(image, pre_start_point, pre_end_point, (0, 165, 255), 12)
+    elif succ_left == 0 and succ_right == 0:
+        image = cv2.rectangle(image, pre_start_point, pre_end_point, (152, 80, 226), 12)
+    else:
+        # image_record = cv2.rectangle(image_record, start_point, end_point, (50, 205, 154), 12)
+        image = cv2.rectangle(image, pre_start_point, pre_end_point, (0, 255, 255), 12)
+    cv2.imwrite('DSLR_image_with_clicked_Box_{}.jpg'.format(dish_number), image)
+
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     image = cv2.resize(image, (640, 427))
     image = Image.fromarray(image)
     image = ImageTk.PhotoImage(image)
-    panel = tk.Label(image=image)
+    panel = tk.Label(image=image)    
     panel.image = image
     if dish_number == 1:
         panel.place(x=475, y=25)
     if dish_number == 2:
         panel.place(x=1250, y=25)
-    if i == 0:
-        image_record = cv2.rectangle(image_record, start_point, end_point, (0, 0, 0), 12)
-    elif i == (number_detection - 1):
-        image_record = cv2.rectangle(image_record, start_point, end_point, (255, 0, 0), 12)
-    elif emb_status == 0:
-        image_record = cv2.rectangle(image_record, start_point, end_point, (0, 165, 255), 12)
-    else:
-        image_record = cv2.rectangle(image_record, start_point, end_point, (50, 205, 154), 12)
-        image_record = cv2.rectangle(image_record, start_point, end_point, (0, 255, 255), 6)
-    cv2.imwrite('DSLR_image_with_clicked_Box_{}.jpg'.format(dish_number), image_record)
+    
     pre_box_center_x = int(box_center_x)
     pre_box_center_y = int(box_center_y)
+    pre_box_coordinate = box_coordinate
     app.update()
-    return pre_box_center_x, pre_box_center_y
+    return pre_box_center_x, pre_box_center_y, pre_box_coordinate
 
 def start_onedish_Yolo(in_q1, in_q2, values):
     # Start LED
@@ -1091,24 +1208,48 @@ def start_onedish_Yolo(in_q1, in_q2, values):
     # Turn off LED
     LED_on_off(0)
     
-def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
+def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_left, inj_succ_right, take_image_flag_1, take_image_flag_2, yolo_inj_succ_start_1, yolo_inj_succ_start_2, yolo_pipe_start_1, yolo_pipe_start_2, embryo_number, image_folder_time, attempt_number, values):
     # Start LED
     b50.configure(bg='green')
     LED_on_off(3)
     time.sleep(2)
-    injection_material = ['GFP solution', 'mCherry Solution']
-    for dish_number in range(1,3):
+    injection_material = ['Red Dye', 'Blue Dye']
+    dish_start = 1
+    dish_end = 1
+    if dish1_flag == [True]:
+        dish_start = 1
+        dish_end = 2
+    if dish2_flag == [True]:
+        dish_start = 2
+        dish_end = 3
+    if dish1_flag == [True] and dish2_flag == [True]:
+        dish_start = 1
+        dish_end = 3
+    print(dish_start)
+    print(dish_end)
+    for dish_number in range(dish_start, dish_end):
+        # This is to save images for data generation
+        image_time = datetime.datetime.now()
+        image_time = time.strftime("%m-%d-%Y_%H-%M-%S")
+        os.mkdir('D:/Microinjection_Project/Python_Code/Injection_Images/'+image_time)
+        image_folder_time.put(image_time)
+        current_emb = 1
+        initial_xyz_stage = []
+        yolk_data = []
+        change_xyz = []
+        sorted_box_center = []
+        # Turning on LED
         LED_on_off(dish_number)
         time.sleep(2)
         # Take DSLR Image
         if dish_number == 1:
             x_place = 475
             y_place = 25
-            z_reference = 12
+            z_reference = 12.4 # Kieren: Put z reference here = Dish 1
         if dish_number == 2:
             x_place = 1250
             y_place = 25
-            z_reference = 12.9
+            z_reference = 11.8 # Kieren: Put z reference here = Dish 2
         DSLR_image('DSLR_image_{}.jpg'.format(dish_number), dish_number)
         app.update()
         # Detect embryos
@@ -1116,7 +1257,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
         app.update()
         XYZ = MyXYZ()
         Position = XYZ.Get_Pos()
-        # XYZ.set_Velocity(50, 50, 25)
+        XYZ.set_Velocity(50, 50, 25)
         XYZ.Position(Position['1'], Position['2'], 0) # Go to zero
         XYZ.Position(Position['1'] - 45, Position['2'], 0) # Go to center of dish
         # Sort sequence of embryos Path planning (Add path planning code here)
@@ -1128,18 +1269,20 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
         # Getting solution
         Alive_num = np.count_nonzero(class_ids == 0)
         Total_vol_required = Alive_num * float((values[16]).get())
-        extra_vol = 200
+        extra_vol = 400
         LED_on_off(0)
         time.sleep(2)
-        vial(dish_number, Total_vol_required+extra_vol, 10, [False])
+        if pipe_flag ==[True]:
+            vial(dish_number, Total_vol_required+extra_vol, 5, [False])
         # Initializing variables
-        no_yolo_detection = 10
+        no_yolo_detection = 1 # Change this to 10 if you want better accuracy
         pix_error_allow = 25
         total_embryos = len(box_center)
         yolo_detection_start[0] = True
         Pressure = MyPressureSystem()
         pre_box_center_x = int(box_center[0][0])
         pre_box_center_y = int(box_center[0][1])
+        pre_box_coordinate = box_coordinate[0]
         emb_status = 1
         unsuccess_inj = 0
         success_inj = 0
@@ -1149,10 +1292,16 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
         XYZ.Position(-7, 60, 0)
         pip_left = np.matrix([[], []])
         pip_righ = np.matrix([[], []])
+        yolo_pipe_start_1.put(True)
+        yolo_pipe_start_2.put(True)
+        time.sleep(1)
         while (pip_left[0].size == 0 or pip_righ[0].size == 0):
             pip_left, pip_righ = pip_detection(pipe_left, pipe_right)
             print('Pip_left', pip_left, 'Pip_righ', pip_righ)
             print('Size left', pip_left[0].size, 'Size right', pip_righ[0].size)
+        take_image(take_image_flag_1, take_image_flag_2, 1000, 0)
+        yolo_pipe_start_1.put(False)
+        yolo_pipe_start_2.put(False)
         # pip_left = np.matrix([[100], [100]])
         # pip_righ = np.matrix([[100], [100]])
         print('Pipette left = ', pip_left, 'Pipette right = ', pip_righ)
@@ -1167,56 +1316,76 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
         # XYZ.Position(Position['1'] - 45, Position['2'], 0)
         # For each embryo this for loop works
         start_time = time.time()
-        Pressure.inject(50, 5)
+        Pressure.inject(75, 5)
         for i in range(total_embryos):
             if class_ids[i] == 0:
                 # Read embryo center co ordinate
-                panel = tk.Label(app, text = 'Injection attempted = {}'.format(i+1))
+                panel = tk.Label(app, text = 'Injection attempting = {}'.format(i+1))
                 panel.place(x=x_place+50, y=y_place+470)
                 box_center_x = box_center[i][0]
                 box_center_y = box_center[i][1]
                 # Transform to 2 microscope view
                 (x_stage, y_stage) = transformation_DSLR_inj(box_center_x, box_center_y, dish_number)
+                initial_xyz_stage.append([x_stage, y_stage, z_reference])
+                sorted_box_center.append([box_center_x, box_center_y])
                 curr_inj = np.matrix([[x_stage], [y_stage], [z_reference]])
                 XYZ.Position(x_stage, y_stage, z_reference)
-                time.sleep(1)
+                time.sleep(0.5)
                 # Change DSLR image
-                pre_box_center_x, pre_box_center_y = img_DSLR_track(box_coordinate[i], pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, total_embryos, emb_status, dish_number)
+                current_left_succ = inj_succ_left.queue[-1]
+                current_right_succ = inj_succ_right.queue[-1]
+                pre_box_center_x, pre_box_center_y, pre_box_coordinate = img_DSLR_track(box_coordinate[i], pre_box_coordinate, pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, i-1, total_embryos, emb_status, dish_number, current_left_succ, current_right_succ)
                 # Detect embryos for the first time
-                inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 150, pip_left, pip_righ, no_yolo_detection)
+                single_yolk_data = [] # Create empty array every time to save data
+                single_change_xyz = [] # Create empty array every time to save data
+                inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 300, pip_left, pip_righ, no_yolo_detection)
+                take_image(take_image_flag_1, take_image_flag_2, current_emb, 0)
                 if emb_status == 0:
-                    unsuccess_inj = unsuccess_inj + 1
-                pre_box_center_x, pre_box_center_y = img_DSLR_track(box_coordinate[i], pre_box_center_x, pre_box_center_y, box_center_x, box_center_y, i, total_embryos, emb_status, dish_number)
+                    inj_succ_left.put(0)
+                    inj_succ_right.put(0)
                 # print(inj_left, inj_righ)
                 if (inj_left.size > 0 and inj_righ.size > 0):
                     attempt = 0
+                    single_yolk_data.append([inj_left.item(0), inj_left.item(1), inj_righ.item(0), inj_righ.item(1)])
                     if abs(inj_left.item(0) - pip_left.item(0)) <= pix_error_allow and abs(inj_righ.item(0) - pip_righ.item(0)) <= pix_error_allow:
                         left_curren = np.matrix([[x_stage], [y_stage], [z_reference]])
-                    while (abs(inj_left.item(0) - pip_left.item(0)) >= pix_error_allow or abs(inj_righ.item(0) - pip_righ.item(0)) >= pix_error_allow) and attempt < 5:
+                    while (abs(inj_left.item(0) - pip_left.item(0)) >= pix_error_allow or abs(inj_righ.item(0) - pip_righ.item(0)) >= pix_error_allow) and attempt < 10:
                         left_curren, righ_curren = transformation_inj_pip(pip_left, pip_righ, inj_left, inj_righ, curr_inj)
+                        single_change_xyz.append([left_curren.item(0) - x_stage, left_curren.item(1) - y_stage, left_curren.item(2) - z_reference])
                         print(left_curren.item(0), left_curren.item(1), left_curren.item(2))
                         XYZ.Position(left_curren.item(0), left_curren.item(1), left_curren.item(2))
-                        time.sleep(1)
+                        time.sleep(0.5)
                         old_inj_left = inj_left
                         old_inj_righ = inj_righ
-                        inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 150, pip_left, pip_righ, no_yolo_detection)
+                        inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 300, pip_left, pip_righ, no_yolo_detection)
                         if (inj_left.size == 0 and inj_righ.size == 0):
                             inj_left = old_inj_left
                             inj_righ = old_inj_righ
-                            # unsuccess_inj = unsuccess_inj + 1
                             break
                         attempt = attempt + 1
-                        print('Attempt # = ', attempt)                       
+                        print('Attempt # = ', attempt)  
+                        take_image(take_image_flag_1, take_image_flag_2, current_emb, attempt)
+                        single_yolk_data.append([inj_left.item(0), inj_left.item(1), inj_righ.item(0), inj_righ.item(1)])
                     x_change, y_change, z_change = transformation_pip_z(inj_left, inj_righ, pip_left, pip_righ)
-                    # XYZ.set_Velocity(50, 50, 0.5)
-                    XYZ.Position(left_curren.item(0) + x_change, left_curren.item(1) + y_change, left_curren.item(2) + z_change + 0.2)
+                    XYZ.set_Velocity(50, 50, float((values[18]).get()))
+                    XYZ.Position(left_curren.item(0) + x_change, left_curren.item(1) + y_change, left_curren.item(2) + z_change + 0.3)
+                    single_change_xyz.append([x_change, y_change, z_change + 0.6])
+                    take_image(take_image_flag_1, take_image_flag_2, current_emb, attempt+1)
                     time.sleep(0.1)
                     call_pressure(values, 'I')
-                    time.sleep(1)
+                    take_image(take_image_flag_1, take_image_flag_2, current_emb, attempt+2)
+                    inj_succ_unsucc(yolo_inj_succ_start_1, yolo_inj_succ_start_2)
+                    time.sleep(0.1) # Time to store success or Unsuccess injection data. 
+                    XYZ.Position(left_curren.item(0) + x_change, left_curren.item(1) + y_change, left_curren.item(2))
+                    XYZ.set_Velocity(50, 50, 25)
                     XYZ.Position(left_curren.item(0) + x_change, left_curren.item(1) + y_change, left_curren.item(2) - 3*z_change)
                     time.sleep(0.1)
-                    # XYZ.set_Velocity(50, 50, 25)
+                
+                if emb_status == 0 or (inj_succ_left.queue[-1] == 0 and inj_succ_right.queue[-1] == 0) or i == 0 :
+                    unsuccess_inj = unsuccess_inj + 1
+                else:
                     success_inj = success_inj + 1
+                
                 current_time = str(datetime.timedelta(seconds = (time.time() - start_time)))
                 panel = tk.Label(app, text='Total injection time = {} sec'.format(current_time))
                 panel.place(x=x_place+50, y=y_place+490)
@@ -1224,12 +1393,17 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, values):
                 panel.place(x=x_place+450, y=y_place+470)
                 panel = tk.Label(app, text = 'Successful Injection = {}'.format(success_inj))
                 panel.place(x=x_place+250, y=y_place+470)
+                current_emb = current_emb + 1
+                yolk_data.append(single_yolk_data)
+                change_xyz.append(single_change_xyz)
         time.sleep(1)
         Position = XYZ.Get_Pos()
         XYZ.Position(Position['1'], Position['2'], 0)
         XYZ.Position(0, 0, 0)
-        vial(3, 1.5*extra_vol, 10, [True])
+        if pipe_flag == [True]:
+            vial(3, 1.5*extra_vol, 10, [True])
         Data_save(dish_number, injection_material, values, current_time, unsuccess_inj, success_inj)
+        Data_save_injection_images(image_time, pip_left, pip_righ, initial_xyz_stage, yolk_data, change_xyz, sorted_box_center)
     # Turn off LED
     LED_on_off(0)
     time.sleep(2)
@@ -1253,6 +1427,7 @@ ml_field = ['ML threashold']
 fields_UMP = 'Position X', 'Position Y', 'Position Z', 'Position D', 'Speed'
 fields_d_UMP = 'dX', 'dY', 'dZ', 'dD'
 fields_p_def = 'Vol (nl)', 'Rate (nl/sec)'
+fields_vel = ['Inj speed']
 ml_threashold = 50
 z_reference = 15.5
 default = [0, 0, 0]
@@ -1268,7 +1443,7 @@ default_d_UMP = [100, 100, 100, 100]
 default_center_UMP = [10000, 10000, 10000, 10000, 10000]
 default_needle = [10000, 10000, 10000, 10000, 10000]
 default_needle_XYZ = [-40, 20, 0]
-pressure_def = [5, 1]
+pressure_def = [10, 5]
 default_inject = [-76.939, 3.04, 20.35]
 videoloop_stop = [False]
 autofocus_start = [False]
@@ -1276,11 +1451,33 @@ needle_detection_start_1 = [False]
 needle_detection_start_2 = [False]
 videoloop_stop_inclined_1 = [False]
 videoloop_stop_inclined_2 = [False]
+take_image_flag_1 = Queue()
+take_image_flag_2 = Queue()
+take_image_flag_1.put(False)
+take_image_flag_2.put(False)
+yolo_inj_succ_start_1 = Queue()
+yolo_inj_succ_start_2 = Queue()
+yolo_inj_succ_start_1.put(False)
+yolo_inj_succ_start_2.put(False)
+yolo_pipe_start_1 = Queue()
+yolo_pipe_start_2 = Queue()
+yolo_pipe_start_1.put(False)
+yolo_pipe_start_2.put(False)
+inj_succ_left = Queue()
+inj_succ_right = Queue()
+inj_succ_left.put(False)
+inj_succ_right.put(False)
+embryo_number = Queue()
+image_folder_time = Queue()
+attempt_number = Queue()
 needle_point_detected = [False]
 yolo_detection_start = [False]
 whole_start = [False]
 inject_status = [True]
 recording_stop = [False]
+dish1_flag = [False]
+dish2_flag = [False]
+pipe_flag = [True]
 
 # x_needle = 0
 # y_needle = 0
@@ -1294,6 +1491,7 @@ num_d = len(fields_d)
 num_UMP = len(fields_UMP)
 num_d_UMP = len(fields_d_UMP)
 num_p_def = len(fields_p_def)
+num_vel = len(fields_vel)
 num_ml = 1
 values = []
 number = 1
@@ -1355,11 +1553,12 @@ for n in range(0, num_p_def):
     z.grid(row = 1, column=1+2*n, columnspan = 1, rowspan = 1)
     values.append(z)
     
-for p in range(0, num):
+for p in range(0, num_vel):
+    tk.Label(app, text=fields_vel[p], font=("Arial", 13)).grid(row=2, column=0+2*p, columnspan = 1, rowspan = 1)
     z = tk.Entry(app)
-    z.config(width=5)
-    z.insert(0, default_vel[n])
-    # z.grid(row = p+3, column=2)
+    z.config(width=4, font=("Arial", 13))
+    z.insert(0, default_vel[2])
+    z.grid(row = 2, column=1+2*p, columnspan = 1, rowspan = 1)
     values.append(z)
 
 
@@ -1495,6 +1694,12 @@ b50.grid(row=0, column=1, sticky=tk.W, pady=4)
 # b62.grid(row=6, column=3, sticky=tk.W, pady=4)
 # b63 = tk.Button(app, text='Set speed', command=lambda: XYZ_set_speed(values))
 # b63.grid(row=2, column=2, sticky=tk.W, pady=4)
+b64 = tk.Button(app, text='Dish 1', font=("Arial", 13), command=lambda: decide_dish(1), bg='red')
+b64.grid(row=3, column=0, sticky=tk.W, pady=4)
+b65 = tk.Button(app, text='Dish 2', font=("Arial", 13), command=lambda: decide_dish(2), bg='red')
+b65.grid(row=3, column=2, sticky=tk.W, pady=4)
+b66 = tk.Button(app, text='Pipette', font=("Arial", 13), command=lambda: decide_pipe(), bg='green')
+b66.grid(row=3, column=3, sticky=tk.W, pady=4)
 
 
 target=app.bind('<Button 3>', getorigin)
