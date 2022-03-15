@@ -1213,7 +1213,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
     b50.configure(bg='green')
     LED_on_off(3)
     time.sleep(2)
-    injection_material = ['Red Dye', 'Blue Dye']
+    injection_material = ['Gold CPA', 'Blue Dye']
     dish_start = 1
     dish_end = 1
     if dish1_flag == [True]:
@@ -1245,7 +1245,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
         if dish_number == 1:
             x_place = 475
             y_place = 25
-            z_reference = 12.4 # Kieren: Put z reference here = Dish 1
+            z_reference = 10.4 # Kieren: Put z reference here = Dish 1
         if dish_number == 2:
             x_place = 1250
             y_place = 25
@@ -1316,7 +1316,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
         # XYZ.Position(Position['1'] - 45, Position['2'], 0)
         # For each embryo this for loop works
         start_time = time.time()
-        Pressure.inject(75, 5)
+        # Pressure.inject(75, 5)
         for i in range(total_embryos):
             if class_ids[i] == 0:
                 # Read embryo center co ordinate
