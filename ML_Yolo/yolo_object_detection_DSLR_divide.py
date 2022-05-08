@@ -12,6 +12,8 @@ from ML_Yolo.row_col_list_fun import row_col_list_fun
 def detections_dslr_divide_yolo(petri_name, path, ml_threashold):
     # Load Yolo
     net = cv2.dnn.readNet("ML_Yolo/yolov4-obj_last_DSLR_divide.weights", "ML_Yolo/yolov4_obj_DSLR_divide.cfg")
+    net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+    net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
     # net = cv2.dnn.readNet("yolov4-obj_last_DSLR_divide.weights", "yolov4_obj_DSLR_divide.cfg")
     
     # Name custom object

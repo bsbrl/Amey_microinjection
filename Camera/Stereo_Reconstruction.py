@@ -321,12 +321,14 @@ def visualize_disparity_map(disparity):
 
 if __name__ == '__main__':
     # read in left and right images as RGB images
-    img_left = cv2.imread('./left.jpg', 1)
-    img_right = cv2.imread('./right.jpg', 1)
+    # img_left = cv2.imread('./left.jpg', 1)
+    # img_right = cv2.imread('./right.jpg', 1)
+    img_left = cv2.imread('./Figure_1.png', 1)
+    img_right = cv2.imread('./Figure_2.png', 1)
     visualize_img_pair(img_left, img_right)
 
     # Step 1: find correspondences between image pair
-    pts1, pts2 = find_match(img_left, img_right)
+    # pts1, pts2 = find_match(img_left, img_right)
     pts1, pts2 = points_colab()
     visualize_find_match(img_left, img_right, pts1, pts2)
 

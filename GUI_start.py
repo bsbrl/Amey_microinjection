@@ -238,7 +238,7 @@ def camera_on_inclined_1(videoloop_stop_inclined_1):
     print('Inclined Camera is on')
     b43.configure(bg='green')
     b44.configure(bg=app.cget('bg'))
-    b53.configure(bg=app.cget('bg'))
+    # b53.configure(bg=app.cget('bg'))
     
 def camera_off_inclined_1(videoloop_stop_inclined_1):
     videoloop_stop_inclined_1[0] = True
@@ -252,7 +252,7 @@ def camera_on_inclined_2(videoloop_stop_inclined_2):
     print('Inclined Camera is on')
     b51.configure(bg='green')
     b52.configure(bg=app.cget('bg'))
-    b46.configure(bg=app.cget('bg'))
+    # b46.configure(bg=app.cget('bg'))
     
 def camera_off_inclined_2(videoloop_stop_inclined_2):
     videoloop_stop_inclined_2[0] = True
@@ -1245,11 +1245,9 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
         if dish_number == 1:
             x_place = 475
             y_place = 25
-            z_reference = 10.4 # Kieren: Put z reference here = Dish 1
         if dish_number == 2:
             x_place = 1250
             y_place = 25
-            z_reference = 11.8 # Kieren: Put z reference here = Dish 2
         DSLR_image('DSLR_image_{}.jpg'.format(dish_number), dish_number)
         app.update()
         # Detect embryos
@@ -1289,7 +1287,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
         # Pipette tip detection
         LED_on_off(3)
         time.sleep(2)
-        XYZ.Position(-7, 60, 0)
+        XYZ.Position(-19, 60, 0)
         pip_left = np.matrix([[], []])
         pip_righ = np.matrix([[], []])
         yolo_pipe_start_1.put(True)
@@ -1326,11 +1324,15 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
                 box_center_y = box_center[i][1]
                 # Transform to 2 microscope view
                 (x_stage, y_stage) = transformation_DSLR_inj(box_center_x, box_center_y, dish_number)
+                if dish_number == 1:
+                    z_reference = float((values[19]).get()) # Take z_ref for dish 1 from GUI
+                if dish_number == 2:
+                    z_reference = float((values[20]).get()) # take z_ref for dish 2 from GUI
                 initial_xyz_stage.append([x_stage, y_stage, z_reference])
                 sorted_box_center.append([box_center_x, box_center_y])
                 curr_inj = np.matrix([[x_stage], [y_stage], [z_reference]])
                 XYZ.Position(x_stage, y_stage, z_reference)
-                time.sleep(0.5)
+                time.sleep(0.25)
                 # Change DSLR image
                 current_left_succ = inj_succ_left.queue[-1]
                 current_right_succ = inj_succ_right.queue[-1]
@@ -1354,7 +1356,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
                         single_change_xyz.append([left_curren.item(0) - x_stage, left_curren.item(1) - y_stage, left_curren.item(2) - z_reference])
                         print(left_curren.item(0), left_curren.item(1), left_curren.item(2))
                         XYZ.Position(left_curren.item(0), left_curren.item(1), left_curren.item(2))
-                        time.sleep(0.5)
+                        time.sleep(0.25)
                         old_inj_left = inj_left
                         old_inj_righ = inj_righ
                         inj_left, inj_righ, emb_status = embryo_detect(yolk_left, yolk_right, 300, pip_left, pip_righ, no_yolo_detection)
@@ -1373,6 +1375,7 @@ def start_multidish_Yolo(yolk_left, yolk_right, pipe_left, pipe_right, inj_succ_
                     take_image(take_image_flag_1, take_image_flag_2, current_emb, attempt+1)
                     time.sleep(0.1)
                     call_pressure(values, 'I')
+                    time.sleep(4)
                     take_image(take_image_flag_1, take_image_flag_2, current_emb, attempt+2)
                     inj_succ_unsucc(yolo_inj_succ_start_1, yolo_inj_succ_start_2)
                     time.sleep(0.1) # Time to store success or Unsuccess injection data. 
@@ -1426,11 +1429,11 @@ fields_d = 'dX', 'dY', 'dZ'
 ml_field = ['ML threashold']
 fields_UMP = 'Position X', 'Position Y', 'Position Z', 'Position D', 'Speed'
 fields_d_UMP = 'dX', 'dY', 'dZ', 'dD'
-fields_p_def = 'Vol (nl)', 'Rate (nl/sec)'
-fields_vel = ['Inj speed']
+fields_p_def = 'Vol (nl)', 'Rate (nl/sec)', 'Inj speed'
+fields_z_ref = ['z_ref_1', 'z_ref_2']
 ml_threashold = 50
-z_reference = 15.5
-default = [0, 0, 0]
+z_reference_def = [11.1, 11.8] 
+default = [0, 0, 0] 
 default_vel = [50, 50, 25]
 default_center = [0, 0, 0]
 default_DSLR = [102, 11, 13]
@@ -1491,7 +1494,7 @@ num_d = len(fields_d)
 num_UMP = len(fields_UMP)
 num_d_UMP = len(fields_d_UMP)
 num_p_def = len(fields_p_def)
-num_vel = len(fields_vel)
+num_z_ref = len(fields_z_ref)
 num_ml = 1
 values = []
 number = 1
@@ -1502,8 +1505,8 @@ Position = XYZ.Get_Pos()
 Velocity = XYZ.Get_Vel()
 default = [round(Position['1'], 2), round(Position['2'], 2), round(Position['3'], 2)]
 default_vel = [round(Velocity['1'], 2), round(Velocity['2'], 2), round(Velocity['3'], 2)]
-Position = MyUMP.Get_Pos()
-default_UMP = [Position['x'], Position['y'], Position['z'], Position['d'], 10000]
+# Position = MyUMP.Get_Pos()
+# default_UMP = [Position['x'], Position['y'], Position['z'], Position['d'], 10000]
 
 for i in range(0, num):
    # tk.Label(app, text=fields[i]).grid(row=i+3)
@@ -1549,15 +1552,22 @@ for n in range(0, num_p_def):
     tk.Label(app, text=fields_p_def[n], font=("Arial", 13)).grid(row=1, column=0+2*n, columnspan = 1, rowspan = 1)
     z = tk.Entry(app)
     z.config(width=4, font=("Arial", 13))
-    z.insert(0, pressure_def[n])
+    if n == 2:
+        z.insert(0, default_vel[2])
+    else:
+        z.insert(0, pressure_def[n])
     z.grid(row = 1, column=1+2*n, columnspan = 1, rowspan = 1)
     values.append(z)
     
-for p in range(0, num_vel):
-    tk.Label(app, text=fields_vel[p], font=("Arial", 13)).grid(row=2, column=0+2*p, columnspan = 1, rowspan = 1)
+for p in range(0, num_z_ref):
+    tk.Label(app, text=fields_z_ref[p], font=("Arial", 13)).grid(row=2, column=0+2*p, columnspan = 1, rowspan = 1)
     z = tk.Entry(app)
     z.config(width=4, font=("Arial", 13))
-    z.insert(0, default_vel[2])
+    z.insert(0, z_reference_def[p])
+    # if p == 0:
+    #     z.insert(0, default_vel[2])
+    # if p == 1:
+    #     z.insert(0, z_reference)
     z.grid(row = 2, column=1+2*p, columnspan = 1, rowspan = 1)
     values.append(z)
 

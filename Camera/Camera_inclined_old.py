@@ -34,9 +34,9 @@ def camera_inclined(number):
                 
     if number == 'both':
         print('Starting both the cameras')
-        cap1 = cv2.VideoCapture(3)
+        cap1 = cv2.VideoCapture(2)
         print('Captured first camera')
-        cap2 = cv2.VideoCapture(4)
+        cap2 = cv2.VideoCapture(3)
         print('Captured both the sources')
         if not(cap1.isOpened()):
             print('Could not open video device 1')

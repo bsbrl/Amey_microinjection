@@ -7,6 +7,8 @@ from os.path import isfile, join
 
 # Load Yolo
 net = cv2.dnn.readNet("ML_Yolo/yolov4-obj_best_pipe.weights", "ML_Yolo/yolov4-obj_pipe.cfg")
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 # Name custom object
 classes = ["Pipette"]

@@ -8,6 +8,8 @@ from os.path import isfile, join
 
 # Load Yolo
 net = cv2.dnn.readNet("ML_Yolo/yolov4-obj_last_miscroscope.weights", "ML_Yolo/yolov4_obj_microscope.cfg")
+net.setPreferableBackend(cv2.dnn.DNN_BACKEND_CUDA)
+net.setPreferableTarget(cv2.dnn.DNN_TARGET_CUDA)
 
 # Name custom object
 classes = ["pipe", "cell", "yolk"]

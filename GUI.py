@@ -238,7 +238,7 @@ def camera_on_inclined_1(videoloop_stop_inclined_1):
     print('Inclined Camera is on')
     b43.configure(bg='green')
     b44.configure(bg=app.cget('bg'))
-    b53.configure(bg=app.cget('bg'))
+    # b53.configure(bg=app.cget('bg'))
     
 def camera_off_inclined_1(videoloop_stop_inclined_1):
     videoloop_stop_inclined_1[0] = True
@@ -252,7 +252,7 @@ def camera_on_inclined_2(videoloop_stop_inclined_2):
     print('Inclined Camera is on')
     b51.configure(bg='green')
     b52.configure(bg=app.cget('bg'))
-    b46.configure(bg=app.cget('bg'))
+    # b46.configure(bg=app.cget('bg'))
     
 def camera_off_inclined_2(videoloop_stop_inclined_2):
     videoloop_stop_inclined_2[0] = True
@@ -311,8 +311,10 @@ def videoLoop_inclined_1(yolk_left, pipe_left, mirror=False):
                 take_image_flag_2[0] = True
             
             if yolo_detection_start[0]:
+                # start_detection_time_1 = time.time()
                 frame1, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_1(frame1)
                 frame1, boxes_pipe_tip = YOLO_pipe_1(frame1)
+                # print('Detection time 1', time.time() - start_detection_time_1)
                 if whole_start[0]:
                     yolk_left.put(boxes_cell)
                     pipe_left.put(boxes_pipe_tip)
@@ -403,8 +405,10 @@ def videoLoop_inclined_2(yolk_right, pipe_right, mirror=False):
                 take_image_flag_2[0] = True
             
             if yolo_detection_start[0]:
+                # start_detection_time_2 = time.time()
                 frame2, boxes_pipe, boxes_cell, boxes_yolk = YOLO_ML_2(frame2)
                 frame2, boxes_pipe_tip = YOLO_pipe_2(frame2)
+                # print('Detection time 2', time.time() - start_detection_time_2)
                 if whole_start[0]:
                     yolk_right.put(boxes_cell)
                     pipe_right.put(boxes_pipe_tip)
